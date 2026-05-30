@@ -1,0 +1,109 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel user-form-card">
+
+    <div class="user-form-header">
+        <div>
+            <p class="user-form-eyebrow">
+                {% if mode == "add" %}
+                    Add System User
+                {% else %}
+                    Edit System User
+                {% endif %}
+            </p>
+
+            <p class="user-form-description">
+                Create and manage authorized accounts for E-Wellness system access.
+            </p>
+        </div>
+
+        <a class="user-form-secondary-btn" href="{{ url_for('users_page') }}">
+            Back to Users
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="auth-error">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="user-form-grid">
+        <div class="form-group">
+            <label>Full Name</label>
+            <input
+                type="text"
+                name="full_name"
+                placeholder="Enter full name"
+                value="{% if user %}{{ user.full_name }}{% endif %}"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Username</label>
+            <input
+                type="text"
+                name="username"
+                placeholder="Enter username"
+                value="{% if user %}{{ user.username }}{% endif %}"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Role</label>
+            <select name="role" required>
+                <option value="">Select role</option>
+
+                <option value="System Admin" {% if user and user.role == "System Admin" %}selected{% endif %}>
+                    System Admin
+                </option>
+
+                <option value="Health Personnel" {% if user and user.role == "Health Personnel" %}selected{% endif %}>
+                    Health Personnel
+                </option>
+
+                <option value="Records Staff" {% if user and user.role == "Records Staff" %}selected{% endif %}>
+                    Records Staff
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>
+                {% if mode == "add" %}
+                    Password
+                {% else %}
+                    New Password
+                {% endif %}
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                placeholder="{% if mode == 'add' %}Create password{% else %}Leave blank to keep current password{% endif %}"
+                {% if mode == "add" %}required{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input
+                type="password"
+                name="confirm_password"
+                placeholder="{% if mode == 'add' %}Confirm password{% else %}Confirm new password{% endif %}"
+                {% if mode == "add" %}required{% endif %}>
+        </div>
+
+        <div class="user-form-actions">
+            <button type="submit" class="primary-btn">
+                {% if mode == "add" %}
+                    Save User
+                {% else %}
+                    Update User
+                {% endif %}
+            </button>
+        </div>
+    </form>
+
+</section>
+{% endblock %}

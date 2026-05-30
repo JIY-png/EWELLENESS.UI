@@ -1,0 +1,177 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel manual-patient-card">
+
+    <div class="manual-patient-header">
+    <div>
+        <p class="manual-eyebrow">Manual Patient Entry</p>
+        <p class="manual-header-description">
+            Register a patient and encode their initial health assessment when the kiosk is not used.
+        </p>
+    </div>
+
+    <a class="manual-secondary-btn" href="{{ url_for('patients_page') }}">
+        Go to Patients
+    </a>
+</div>
+
+    <form method="POST" class="manual-patient-form">
+        <div class="manual-section-title">
+            <h4>Patient Information</h4>
+            <p>Basic details used for patient identification and record retrieval.</p>
+        </div>
+
+        <div class="form-group">
+            <label>First Name</label>
+            <input
+                type="text"
+                name="first_name"
+                placeholder="First name"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Last Name</label>
+            <input
+                type="text"
+                name="last_name"
+                placeholder="Last name"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Gender</label>
+            <select name="gender" required>
+                <option value="">Select gender</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+            </select>
+        </div>
+
+        <div class="form-group birth-date-group">
+            <label>Birth Date</label>
+
+            <div class="birth-date-single">
+                <input
+                    type="text"
+                    id="birthDateText"
+                    name="birth_date"
+                    placeholder="MM/DD/YYYY"
+                    maxlength="10"
+                    required>
+
+                <button type="button" class="calendar-btn" id="openBirthDatePicker">
+                    📅
+                </button>
+
+                <input
+                    type="date"
+                    id="birthDatePicker"
+                    class="hidden-date-picker"
+                    aria-label="Select birth date from calendar">
+            </div>
+
+            <small class="form-hint">
+                Type the date manually or click the calendar icon.
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label>Contact Number</label>
+            <input
+                type="text"
+                name="contact_no"
+                placeholder="09XXXXXXXXX"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Barangay</label>
+            <input
+                type="text"
+                name="barangay"
+                placeholder="Enter barangay"
+                required>
+        </div>
+
+        <div class="manual-section-title">
+            <h4>Initial Health Record</h4>
+            <p>Manual assessment readings recorded by healthcare personnel.</p>
+        </div>
+
+        <div class="form-group">
+            <label>Temperature °C</label>
+            <input
+                type="number"
+                step="0.1"
+                name="temperature"
+                placeholder="36.5"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Heart Rate bpm</label>
+            <input
+                type="number"
+                name="heart_rate"
+                placeholder="78"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Oxygen Saturation %</label>
+            <input
+                type="number"
+                name="oxygen_saturation"
+                placeholder="98"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Systolic BP</label>
+            <input
+                type="number"
+                name="systolic"
+                placeholder="120"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Diastolic BP</label>
+            <input
+                type="number"
+                name="diastolic"
+                placeholder="80"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Height cm</label>
+            <input
+                type="number"
+                step="0.1"
+                name="height"
+                placeholder="160"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label>Weight kg</label>
+            <input
+                type="number"
+                step="0.1"
+                name="weight"
+                placeholder="55"
+                required>
+        </div>
+
+        <div class="manual-form-actions">
+            <button type="submit" class="primary-btn">
+                Save Patient and Health Record
+            </button>
+        </div>
+    </form>
+
+</section>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel users-card">
+
+    <div class="users-header">
+        <div>
+            <p class="users-helper-text">
+                Manage system users, admin roles, and staff access accounts.
+            </p>
+        </div>
+
+        <a class="users-primary-btn" href="{{ url_for('add_user_page') }}">
+            + Add User
+        </a>
+    </div>
+
+    <div class="users-toolbar">
+        <input
+            type="text"
+            id="userSearch"
+            placeholder="Search name, username, or role"
+            autocomplete="off">
+
+        <select id="userRoleFilter">
+            <option value="all">All Roles</option>
+            <option value="System Admin">System Admin</option>
+            <option value="Health Personnel">Health Personnel</option>
+            <option value="Records Staff">Records Staff</option>
+        </select>
+
+        <button type="button" id="clearUserFilters">
+            Clear
+        </button>
+    </div>
+
+    <div class="users-table-box">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Account Type</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="userTableBody">
+                {% for user in admin_users %}
+                <tr
+                    class="user-row"
+                    data-search="{{ user.full_name }} {{ user.username }} {{ user.role }}"
+                    data-role="{{ user.role }}">
+
+                    <td>
+                        <strong>{{ user.full_name }}</strong>
+                    </td>
+
+                    <td>{{ user.username }}</td>
+
+                    <td>
+                        <span class="user-role-text">
+                            {{ user.role }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if user.id == session.get("admin_id") %}
+                            <span class="current-user-text">Current User</span>
+                        {% else %}
+                            <span class="muted-text">System Account</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div class="users-actions">
+                            <a
+                                class="users-action-link edit"
+                                href="{{ url_for('edit_user_page', admin_id=user.id) }}">
+                                Edit
+                            </a>
+
+                            {% if user.id != session.get("admin_id") %}
+                            <form
+                                method="POST"
+                                action="{{ url_for('delete_user_page', admin_id=user.id) }}"
+                                onsubmit="return confirm('Delete this user account?');">
+
+                                <button type="submit" class="users-action-link delete">
+                                    Delete
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="users-action-disabled">
+                                Delete
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="userNoResults" class="empty-state" style="display: none;">
+            No matching users found.
+        </div>
+    </div>
+
+</section>
+{% endblock %}

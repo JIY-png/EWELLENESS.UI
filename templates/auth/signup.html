@@ -1,0 +1,60 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">+</div>
+            <h2>Admin Signup</h2>
+            <p>Create an authorized admin account for EHR system access.</p>
+        </div>
+
+        {% if error %}
+        <div class="auth-error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="full_name" placeholder="Enter full name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" placeholder="Create username" required>
+            </div>
+
+            <div class="form-group">
+                <label>Admin Role</label>
+                <select name="role" required>
+                    <option value="">Select role</option>
+                    <option value="System Admin">System Admin</option>
+                    <option value="Health Personnel">Health Personnel</option>
+                    <option value="Records Staff">Records Staff</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Create password" required>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" name="confirm_password" placeholder="Confirm password" required>
+            </div>
+
+            <button type="submit" class="auth-btn">
+                Create Account
+            </button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="{{ url_for('login_page') }}">Login here</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

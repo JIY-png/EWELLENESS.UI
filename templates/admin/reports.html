@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="reports-page">
+
+    <div class="reports-top-actions">
+        <button type="button" class="print-report-btn" id="printReportBtn">
+            Print or Save PDF
+        </button>
+    </div>
+
+    <div class="reports-grid reports-reordered-grid">
+        <section class="panel reports-panel reports-health-summary-panel">
+            <div class="reports-panel-header">
+                <div>
+                    <h3>Health Status Summary</h3>
+                    <p>Overview of normal and flagged health records</p>
+                </div>
+            </div>
+
+            <div class="report-trend-list">
+                {% for item in status_trends %}
+                <div class="report-trend-item">
+                    <div class="report-trend-label">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.count }}</strong>
+                    </div>
+
+                    <div class="report-bar-bg">
+                        {% if item.label == "Normal" %}
+                        <div
+                            class="report-bar-fill"
+                            data-percentage="{{ item.percentage }}">
+                        </div>
+                        {% else %}
+                        <div
+                            class="report-bar-fill attention"
+                            data-percentage="{{ item.percentage }}">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="panel reports-panel bmi-visualization-panel reports-bmi-trend-panel">
+            <div class="reports-panel-header bmi-chart-header">
+                <div>
+                    <h3>BMI Trend Overview</h3>
+                    <p>BMI trend line with category-based color coding.</p>
+                </div>
+
+                <div class="bmi-chart-controls">
+                    <label for="bmiChartRange">View by</label>
+
+                    <select id="bmiChartRange">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="bmi-custom-range hidden" id="bmiCustomRange">
+                    <div>
+                        <label for="bmiStartDate">From</label>
+                        <input type="date" id="bmiStartDate">
+                    </div>
+
+                    <div>
+                        <label for="bmiEndDate">To</label>
+                        <input type="date" id="bmiEndDate">
+                    </div>
+                </div>
+            </div>
+
+            <div
+                class="bmi-line-chart"
+                id="bmiLineChart"
+                data-records='{{ bmi_chart_records | tojson }}'>
+
+                <div class="bmi-line-chart-box">
+                    <svg
+                        id="bmiLineChartSvg"
+                        viewBox="0 0 720 320"
+                        preserveAspectRatio="none"
+                        aria-label="BMI trend line graph">
+                    </svg>
+                </div>
+
+                <div class="bmi-chart-legend">
+                    <span><i class="bmi-below-normal"></i> Below Normal</span>
+                    <span><i class="bmi-normal"></i> Normal</span>
+                    <span><i class="bmi-overweight"></i> Overweight</span>
+                    <span><i class="bmi-obese"></i> Obese</span>
+                </div>
+
+                <p class="bmi-chart-note" id="bmiLineChartNote">
+                    Showing BMI trend from available health records.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <section class="panel generated-report-card">
+        <div class="generated-report-header">
+            <div>
+                <h3>Generated Health Report</h3>
+                <p>Printable summary for healthcare personnel</p>
+            </div>
+        </div>
+
+        <div class="generated-report-table-box">
+            <table class="generated-report-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Temperature</th>
+                        <th>Heart Rate</th>
+                        <th>SpO2</th>
+                        <th>Blood Pressure</th>
+                        <th>BMI</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>
+                            <strong>{{ record.patient_name }}</strong>
+                        </td>
+
+                        <td>
+                            {% set date_parts = record.created_at.split(" ", 1) %}
+                            <div class="report-date-stack">
+                                <span>{{ date_parts[0] }}</span>
+                                <small>{{ date_parts[1] }}</small>
+                            </div>
+                        </td>
+
+                        <td>{{ record.temperature }} °C</td>
+
+                        <td>{{ record.heart_rate }} bpm</td>
+
+                        <td>{{ record.oxygen_saturation }}%</td>
+
+                        <td>{{ record.blood_pressure }}</td>
+
+                        <td>
+                            <div class="report-bmi-stack">
+                                <span>{{ record.bmi }}</span>
+                                <small>{{ record.bmi_category }}</small>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if record.status == "Normal" %}
+                            <span class="report-status-text normal">
+                                {{ record.status }}
+                            </span>
+                            {% else %}
+                            <span class="report-status-text attention">
+                                {{ record.status }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if records|length == 0 %}
+            <div class="empty-state">
+                No health records available.
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+</div>
+{% endblock %}

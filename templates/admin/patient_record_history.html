@@ -1,0 +1,184 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel phr-page-card">
+
+    <div class="phr-header">
+        <div>
+            <p class="phr-eyebrow">Patient Health Record</p>
+            <h3>{{ patient.first_name }} {{ patient.last_name }}</h3>
+
+            <div class="phr-patient-meta">
+                <span>{{ patient.gender }}</span>
+                <span>Birth Date: {{ patient.birth_date }}</span>
+                <span>Barangay: {{ patient.barangay }}</span>
+            </div>
+        </div>
+
+        <div class="phr-header-actions">
+            <a class="phr-secondary-btn" href="{{ url_for('ehr_records_page') }}">
+                Back to EHR Records
+            </a>
+
+            <a
+                class="phr-download-btn"
+                href="{{ url_for('download_patient_history', patient_id=patient.id) }}">
+                Download History PDF
+            </a>
+
+            <a
+                class="phr-primary-btn"
+                href="{{ url_for('add_health_record_page', patient_id=patient.id) }}">
+                Add New Record
+            </a>
+        </div>
+    </div>
+
+    <div class="phr-summary-grid">
+        <article class="phr-summary-card">
+            <p>Total Records</p>
+            <h2>{{ records|length }}</h2>
+            <span>Health assessments saved</span>
+        </article>
+
+        <article class="phr-summary-card">
+            <p>Latest BMI</p>
+
+            <h2>
+                {% if latest_record %}
+                    {{ latest_record.bmi }}
+                {% else %}
+                    —
+                {% endif %}
+            </h2>
+
+            <span>
+                {% if latest_record %}
+                    {{ latest_record.bmi_category }}
+                {% else %}
+                    No BMI record yet
+                {% endif %}
+            </span>
+        </article>
+
+        <article class="phr-summary-card {% if latest_record and latest_record.status != 'Normal' %}phr-alert-card{% endif %}">
+            <p>Latest Status</p>
+
+            <h2>
+                {% if latest_record %}
+                    {{ latest_record.status }}
+                {% else %}
+                    —
+                {% endif %}
+            </h2>
+
+            <span>
+                {% if latest_record %}
+                    {{ latest_record.created_at }}
+                {% else %}
+                    No assessment yet
+                {% endif %}
+            </span>
+        </article>
+    </div>
+
+    <div class="phr-search-row">
+        <input
+            type="text"
+            id="patientRecordSearch"
+            placeholder="Search date, status, BMI category, or vital sign"
+            autocomplete="off">
+
+        <button type="button" id="clearPatientRecordSearch">
+            Clear
+        </button>
+    </div>
+
+    <div class="phr-record-list">
+        {% for record in records %}
+        <article
+            class="phr-record-card patient-record-row"
+            data-search="
+                {{ record.created_at }}
+                {{ record.temperature }}
+                {{ record.heart_rate }}
+                {{ record.oxygen_saturation }}
+                {{ record.blood_pressure }}
+                {{ record.height }}
+                {{ record.weight }}
+                {{ record.bmi }}
+                {{ record.bmi_category }}
+                {{ record.status }}
+                {{ record.remarks }}
+            ">
+
+            <div class="phr-record-top">
+                <div>
+                    <h4>{{ record.created_at }}</h4>
+                    <p>Recorded patient monitoring assessment</p>
+                </div>
+
+                <span class="phr-status {% if record.status == 'Normal' %}phr-normal{% else %}phr-attention{% endif %}">
+                    {{ record.status }}
+                </span>
+            </div>
+
+            {% if record.status != "Normal" %}
+            <div class="phr-alert-reason">
+                <strong>Reason for attention:</strong>
+                <span>{{ record.remarks }}</span>
+            </div>
+            {% endif %}
+
+            <div class="phr-vitals-grid">
+                <div class="phr-vital-item">
+                    <span>Temperature</span>
+                    <strong>{{ record.temperature }} °C</strong>
+                </div>
+
+                <div class="phr-vital-item">
+                    <span>Heart Rate</span>
+                    <strong>{{ record.heart_rate }} bpm</strong>
+                </div>
+
+                <div class="phr-vital-item">
+                    <span>SpO2</span>
+                    <strong>{{ record.oxygen_saturation }}%</strong>
+                </div>
+
+                <div class="phr-vital-item">
+                    <span>Blood Pressure</span>
+                    <strong>{{ record.blood_pressure }}</strong>
+                </div>
+
+                <div class="phr-vital-item">
+                    <span>Height</span>
+                    <strong>{{ record.height }} cm</strong>
+                </div>
+
+                <div class="phr-vital-item">
+                    <span>Weight</span>
+                    <strong>{{ record.weight }} kg</strong>
+                </div>
+
+                <div class="phr-vital-item">
+                    <span>BMI</span>
+                    <strong>{{ record.bmi }}</strong>
+                    <small>{{ record.bmi_category }}</small>
+                </div>
+            </div>
+
+            <div class="phr-remarks">
+                <span>Remarks</span>
+                <p>{{ record.remarks }}</p>
+            </div>
+        </article>
+        {% endfor %}
+
+        <div id="patientRecordNoResults" class="empty-state" style="display: none;">
+            No matching health records found.
+        </div>
+    </div>
+
+</section>
+{% endblock %} 

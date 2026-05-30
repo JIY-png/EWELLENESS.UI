@@ -1,0 +1,102 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel security-log-card">
+
+    <p class="security-helper-text">
+        Track user activity, record access, and system actions for accountability.
+    </p>
+
+    <div class="security-toolbar">
+        <div class="security-search-wrap">
+            <input
+                type="text"
+                id="securityLogSearch"
+                placeholder="Search name, role, activity, or date"
+                autocomplete="off">
+        </div>
+
+        <select id="securityRoleFilter">
+            <option value="all">All Roles</option>
+            <option value="System Admin">System Admin</option>
+            <option value="Health Personnel">Health Personnel</option>
+            <option value="Records Staff">Records Staff</option>
+            <option value="Admin">Admin</option>
+        </select>
+
+        <select id="securityActionFilter">
+            <option value="all">All Actions</option>
+            <option value="logged in">Login</option>
+            <option value="logged out">Logout</option>
+            <option value="viewed">View Records</option>
+            <option value="added">Add Record / Patient</option>
+            <option value="created">Create User</option>
+            <option value="updated">Update User</option>
+            <option value="deleted">Delete User</option>
+            <option value="downloaded">Download PDF</option>
+        </select>
+
+        <button type="button" id="clearSecurityFilters">
+            Clear
+        </button>
+    </div>
+
+    <div class="security-table-box">
+        <table class="security-table">
+            <thead>
+                <tr>
+                    <th>Date and Time</th>
+                    <th>Staff Name</th>
+                    <th>Role</th>
+                    <th>Activity</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="securityLogTableBody">
+                {% for log in logs %}
+                <tr
+                    class="security-log-row"
+                    data-search="{{ log.date_time }} {{ log.user }} {{ log.role }} {{ log.action }}"
+                    data-role="{{ log.role }}"
+                    data-action="{{ log.action }}">
+
+                    <td>
+                        {% set date_parts = log.date_time.split(" ", 1) %}
+                        <div class="security-date-stack">
+                            <span>{{ date_parts[0] }}</span>
+                            <small>{{ date_parts[1] }}</small>
+                        </div>
+                    </td>
+
+                    <td>
+                        <strong>{{ log.user }}</strong>
+                    </td>
+
+                    <td>{{ log.role }}</td>
+
+                    <td>{{ log.action }}</td>
+
+                    <td>
+                        <span class="security-status-text">
+                            Logged
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if logs|length == 0 %}
+        <div class="empty-state">
+            No security logs available.
+        </div>
+        {% endif %}
+
+        <div id="securityLogNoResults" class="empty-state" style="display: none;">
+            No matching logs found.
+        </div>
+    </div>
+
+</section>
+{% endblock %}

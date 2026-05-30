@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Wellness | {{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script defer src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+
+<body>
+    <div class="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast-message toast-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button type="button" class="toast-close">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    {% if title == "Admin Login" or title == "Admin Signup" %}
+
+        <main class="auth-layout">
+            <section class="auth-content">
+                {% block content %}{% endblock %}
+            </section>
+        </main>
+
+    {% else %}
+
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+
+        <aside class="sidebar" id="sidebar">
+            <div class="brand">
+                <div class="brand-icon">+</div>
+
+                <div>
+                    <h2>E-Wellness</h2>
+                    <p>Health Monitoring EHR</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M3 13h8V3H3v10Z"></path>
+                            <path d="M13 21h8V11h-8v10Z"></path>
+                            <path d="M13 3v6h8V3h-8Z"></path>
+                            <path d="M3 21h8v-6H3v6Z"></path>
+                        </svg>
+                    </span>
+                    Dashboard
+                </a>
+
+                <a href="{{ url_for('patients_page') }}" class="nav-link {% if active_page == 'patients' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M16 11a4 4 0 1 0-8 0a4 4 0 0 0 8 0Z"></path>
+                            <path d="M4 21a8 8 0 0 1 16 0"></path>
+                        </svg>
+                    </span>
+                    Patients
+                </a>
+
+                <a href="{{ url_for('ehr_records_page') }}" class="nav-link {% if active_page == 'ehr_records' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M7 3h8l4 4v14H7V3Z"></path>
+                            <path d="M15 3v5h5"></path>
+                            <path d="M10 13h6"></path>
+                            <path d="M10 17h6"></path>
+                            <path d="M10 9h2"></path>
+                        </svg>
+                    </span>
+                    EHR Records
+                </a>
+
+                <a href="{{ url_for('reports_page') }}" class="nav-link {% if active_page == 'reports' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 19V5"></path>
+                            <path d="M4 19h16"></path>
+                            <path d="M8 16v-5"></path>
+                            <path d="M12 16V8"></path>
+                            <path d="M16 16v-9"></path>
+                        </svg>
+                    </span>
+                    Reports
+                </a>
+
+                <a href="{{ url_for('security_page') }}" class="nav-link {% if active_page == 'security' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 3l8 4v5c0 5-3.5 8.5-8 10c-4.5-1.5-8-5-8-10V7l8-4Z"></path>
+                            <path d="M9.5 12l1.8 1.8L15 10"></path>
+                        </svg>
+                    </span>
+                    Security Logs
+                </a>
+
+                {% if session.get("admin_role") == "System Admin" %}
+                <a href="{{ url_for('users_page') }}" class="nav-link {% if active_page == 'users' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M16 11a4 4 0 1 0-8 0a4 4 0 0 0 8 0Z"></path>
+                            <path d="M4 21a8 8 0 0 1 16 0"></path>
+                            <path d="M19 8v4"></path>
+                            <path d="M17 10h4"></path>
+                        </svg>
+                    </span>
+                    Users
+                </a>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    {{ session.get("admin_name", "Admin")[:1] }}
+                </div>
+
+                <div class="sidebar-user-info">
+                    <strong>{{ session.get("admin_name", "Admin User") }}</strong>
+                    <span>{{ session.get("admin_role", "System Admin") }}</span>
+                </div>
+            </div>
+
+            <a href="{{ url_for('logout_page') }}" class="logout-link">
+                Logout
+            </a>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <h1>{{ title }}</h1>
+                    <p>Centralized electronic health record and monitoring system</p>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="live-badge">
+                        <span class="pulse"></span>
+                        Real-time Monitoring
+                    </div>
+
+                    <div class="clock" id="clock">Loading...</div>
+                </div>
+            </header>
+
+            <section class="page-content">
+                {{ self.content() }}
+            </section>
+        </main>
+
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,113 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel ehr-table-card clean-ehr-card">
+    <div class="ehr-card-header clean-ehr-header">
+        <div>
+            <p class="ehr-helper-text">
+                Select a patient to view all previous and new health records.
+            </p>
+        </div>
+    </div>
+
+    <div class="ehr-search-row">
+        <input
+            type="text"
+            id="ehrPatientSearch"
+            placeholder="Search patient name, barangay, status, or BMI category"
+            autocomplete="off">
+
+        <button type="button" id="clearEhrPatientSearch">
+            Clear
+        </button>
+    </div>
+
+    <div class="ehr-table-box">
+        <table class="ehr-patient-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Barangay</th>
+                    <th>Records</th>
+                    <th>Latest Record</th>
+                    <th>BMI</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="ehrPatientTableBody">
+                {% for item in patient_summaries %}
+                <tr
+                    class="ehr-patient-row"
+                    data-search="{{ item.patient.first_name }} {{ item.patient.last_name }} {{ item.patient.barangay }} {% if item.latest_record %}{{ item.latest_record.status }} {{ item.latest_record.bmi_category }}{% endif %}">
+
+                    <td class="patient-name-cell">
+                        <strong>{{ item.patient.first_name }} {{ item.patient.last_name }}</strong>
+                    </td>
+
+                    <td>
+                        {{ item.patient.barangay }}
+                    </td>
+
+                    <td>
+                        <span class="record-count-badge">
+                            {{ item.record_count }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if item.latest_record %}
+                            {% set latest_parts = item.latest_record.created_at.split(" ", 1) %}
+                            <div class="date-time-stack">
+                                <span>{{ latest_parts[0] }}</span>
+                                <small>{{ latest_parts[1] }}</small>
+                            </div>
+                        {% else %}
+                            <span class="muted-text">No record yet</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.latest_record %}
+                            <div class="bmi-stack">
+                                <span>{{ item.latest_record.bmi }}</span>
+                                <small>{{ item.latest_record.bmi_category }}</small>
+                            </div>
+                        {% else %}
+                            <span class="muted-text">No BMI yet</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if item.latest_record %}
+                            <span class="ehr-status-text {% if item.latest_record.status == 'Normal' %}normal{% else %}attention{% endif %}">
+                                {{ item.latest_record.status }}
+                            </span>
+                        {% else %}
+                            <span class="ehr-status-text neutral">
+                                No Record
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div class="ehr-action-buttons">
+                            <a
+                                class="ehr-action-btn ehr-view-btn"
+                                href="{{ url_for('patient_record_history_page', patient_id=item.patient.id) }}">
+                                View Records
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="ehrPatientNoResults" class="empty-state" style="display: none;">
+            No matching patients found.
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<section class="panel patients-page-card">
+    <div class="patients-header">
+        <div>
+            <h3>Patient Registry</h3>
+            <p>View, search, and manage all registered patients in the E-Wellness system.</p>
+        </div>
+
+        <a class="patients-main-btn" href="{{ url_for('add_patient_page') }}">
+            + Add Patient Manually
+        </a>
+    </div>
+
+    <div class="patients-toolbar">
+        <div class="patients-search-modern">
+            <span class="search-icon">⌕</span>
+
+            <input
+                type="text"
+                id="patientRegistrySearch"
+                placeholder="Search patient name, barangay, gender, or contact number"
+                autocomplete="off">
+
+            <button type="button" id="clearPatientRegistrySearch">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    <div class="patients-table-box">
+        <table class="patients-table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Gender</th>
+                    <th>Birth Date</th>
+                    <th>Contact Number</th>
+                    <th>Barangay</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="patientRegistryTableBody">
+                {% for patient in patients %}
+                <tr
+                    class="patient-registry-row"
+                    data-search="{{ patient.first_name }} {{ patient.last_name }} {{ patient.gender }} {{ patient.birth_date }} {{ patient.contact_no }} {{ patient.barangay }}">
+                    <td>
+                        <strong>{{ patient.first_name }} {{ patient.last_name }}</strong>
+                    </td>
+
+                    <td>{{ patient.gender }}</td>
+
+                    <td>{{ patient.birth_date }}</td>
+
+                    <td>{{ patient.contact_no }}</td>
+
+                    <td>{{ patient.barangay }}</td>
+
+                    <td>
+                        <div class="patients-actions">
+                            <a
+                                class="patients-action-btn view"
+                                href="{{ url_for('patient_record_history_page', patient_id=patient.id) }}">
+                                View Records
+                            </a>
+
+                            <a
+                                class="patients-action-btn add"
+                                href="{{ url_for('add_health_record_page', patient_id=patient.id) }}">
+                                Add Record
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="patientRegistryNoResults" class="empty-state" style="display: none;">
+            No matching patients found.
+        </div>
+    </div>
+</section>
+{% endblock %}

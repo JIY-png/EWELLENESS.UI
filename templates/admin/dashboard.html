@@ -1,0 +1,170 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+
+<div class="cards-grid dashboard-summary">
+    <article class="stat-card">
+        <p>Total Patients</p>
+        <h2 data-live="total_patients">{{ stats.total_patients }}</h2>
+        <span>Registered users in the system</span>
+    </article>
+
+    <article class="stat-card">
+        <p>Total EHR Records</p>
+        <h2 data-live="total_records">{{ stats.total_records }}</h2>
+        <span>Stored monitoring entries</span>
+    </article>
+
+    <article class="stat-card">
+        <p>Normal Records</p>
+        <h2>{{ stats.normal_records }}</h2>
+        <span>Readings within normal range</span>
+    </article>
+
+    <article class="stat-card alert-card">
+        <p>Needs Attention</p>
+        <h2 data-live="attention_records">{{ stats.attention_records }}</h2>
+        <span>Flagged health readings</span>
+    </article>
+</div>
+
+<div class="overview-grid">
+    <section class="panel graph-panel bmi-visualization-panel">
+        <div class="panel-header bmi-chart-header">
+            <div>
+                <h3>BMI Trend Overview</h3>
+                <p>BMI trend line with category-based color coding.</p>
+            </div>
+
+            <div class="bmi-chart-controls">
+                <label for="bmiChartRange">View by</label>
+
+                <select id="bmiChartRange">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+
+            <div class="bmi-custom-range hidden" id="bmiCustomRange">
+                <div>
+                    <label for="bmiStartDate">From</label>
+                    <input type="date" id="bmiStartDate">
+                </div>
+
+                <div>
+                    <label for="bmiEndDate">To</label>
+                    <input type="date" id="bmiEndDate">
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="bmi-line-chart"
+            id="bmiLineChart"
+            data-records='{{ bmi_chart_records | tojson }}'>
+
+            <div class="bmi-line-chart-box">
+                <svg
+                    id="bmiLineChartSvg"
+                    viewBox="0 0 720 320"
+                    preserveAspectRatio="none"
+                    aria-label="BMI trend line graph">
+                </svg>
+            </div>
+
+            <div class="bmi-chart-legend">
+                <span><i class="bmi-below-normal"></i> Below Normal</span>
+                <span><i class="bmi-normal"></i> Normal</span>
+                <span><i class="bmi-overweight"></i> Overweight</span>
+                <span><i class="bmi-obese"></i> Obese</span>
+            </div>
+
+            <p class="bmi-chart-note" id="bmiLineChartNote">
+                Showing BMI trend from available health records.
+            </p>
+        </div>
+    </section>
+
+    <section class="panel graph-panel">
+        <div class="panel-header">
+            <div>
+                <h3>Health Status Summary</h3>
+                <p>Overview of normal and flagged health records</p>
+            </div>
+        </div>
+
+        <div class="donut-wrapper">
+            <div
+                class="donut-chart"
+                data-normal="{{ stats.normal_records }}"
+                data-attention="{{ stats.attention_records }}">
+                <div class="donut-center">
+                    <strong>{{ stats.total_records }}</strong>
+                    <span>Total Records</span>
+                </div>
+            </div>
+
+            <div class="legend-list">
+                <div class="legend-item">
+                    <span class="legend-dot normal-dot"></span>
+                    Normal Records
+                    <strong>{{ stats.normal_records }}</strong>
+                </div>
+
+                <div class="legend-item">
+                    <span class="legend-dot alert-dot"></span>
+                    Needs Attention
+                    <strong>{{ stats.attention_records }}</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<section class="panel large-panel">
+    <div class="panel-header">
+        <div>
+            <h3>Latest Health Monitoring Records</h3>
+            <p>Recent vital sign assessments from the kiosk</p>
+        </div>
+
+        <a class="small-link" href="{{ url_for('ehr_records_page') }}">View all</a>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Temperature</th>
+                    <th>Heart Rate</th>
+                    <th>SpO2</th>
+                    <th>BMI</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for record in latest_records %}
+                <tr>
+                    <td>{{ record.patient_name }}</td>
+                    <td>{{ record.temperature }} °C</td>
+                    <td>{{ record.heart_rate }} bpm</td>
+                    <td>{{ record.oxygen_saturation }}%</td>
+                    <td>{{ record.bmi }}</td>
+                    <td>
+                        <span class="badge {% if record.status == 'Normal' %}normal{% else %}attention{% endif %}">
+                            {{ record.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}
