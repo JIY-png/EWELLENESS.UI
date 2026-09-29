@@ -74,6 +74,57 @@ document.addEventListener("DOMContentLoaded", function () {
             if (documentationReduction) {
                 documentationReduction.textContent = data.stats.documentation_reduction + "%";
             }
+
+            // Update BMI chart data
+            const bmiChart = document.getElementById("bmiLineChart");
+            if (bmiChart) {
+                bmiChart.setAttribute("data-records", JSON.stringify(data.bmi_chart_records));
+                // Trigger chart redraw
+                const bmiChartNote = document.getElementById("bmiLineChartNote");
+                if (bmiChartNote) {
+                    bmiChartNote.textContent = "BMI trend updated.";
+                }
+            }
+
+            // Update donut chart
+            const donutChart = document.querySelector(".donut-chart");
+            if (donutChart) {
+                donutChart.setAttribute("data-normal", data.stats.normal_records);
+                donutChart.setAttribute("data-attention", data.stats.attention_records);
+
+                const normal = data.stats.normal_records;
+                const attention = data.stats.attention_records;
+                const total = normal + attention;
+
+                if (total > 0) {
+                    const normalDegrees = (normal / total) * 360;
+
+                    donutChart.style.background = `
+                        conic-gradient(
+                            #0b9f6a 0deg,
+                            #0b9f6a ${normalDegrees}deg,
+                            #dc2626 ${normalDegrees}deg,
+                            #dc2626 360deg
+                        )
+                    `;
+                }
+
+                // Update donut center text
+                const donutCenter = donutChart.querySelector(".donut-center strong");
+                if (donutCenter) {
+                    donutCenter.textContent = total;
+                }
+            }
+
+            // Update status trends bars
+            const reportBarFills = document.querySelectorAll(".report-bar-fill");
+            data.status_trends.forEach(function (item, index) {
+                if (reportBarFills[index]) {
+                    reportBarFills[index].setAttribute("data-percentage", item.percentage);
+                    reportBarFills[index].style.width = item.percentage + "%";
+                }
+            });
+
         } catch (error) {
             console.log("Dashboard refresh skipped:", error);
         }

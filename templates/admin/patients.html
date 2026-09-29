@@ -33,11 +33,10 @@
         <table class="patients-table">
             <thead>
                 <tr>
-                    <th>Patient Name</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Age</th>
                     <th>Gender</th>
-                    <th>Birth Date</th>
-                    <th>Contact Number</th>
-                    <th>Barangay</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -46,18 +45,16 @@
                 {% for patient in patients %}
                 <tr
                     class="patient-registry-row"
-                    data-search="{{ patient.first_name }} {{ patient.last_name }} {{ patient.gender }} {{ patient.birth_date }} {{ patient.contact_no }} {{ patient.barangay }}">
+                    data-search="{{ patient.first_name }} {{ patient.last_name }} {{ patient.gender }}">
                     <td>
-                        <strong>{{ patient.first_name }} {{ patient.last_name }}</strong>
+                        <strong>{{ patient.first_name }}</strong>
                     </td>
 
+                    <td>{{ patient.last_name }}</td>
+
+                    <td>{{ patient.age }}</td>
+
                     <td>{{ patient.gender }}</td>
-
-                    <td>{{ patient.birth_date }}</td>
-
-                    <td>{{ patient.contact_no }}</td>
-
-                    <td>{{ patient.barangay }}</td>
 
                     <td>
                         <div class="patients-actions">

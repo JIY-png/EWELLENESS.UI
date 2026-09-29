@@ -36,7 +36,9 @@
 
         <aside class="sidebar" id="sidebar">
             <div class="brand">
-                <div class="brand-icon">+</div>
+                <div class="brand-icon">
+                    <img src="{{ url_for('static', filename='E-Wellness logo.png') }}" alt="E-Wellness Logo">
+                </div>
 
                 <div>
                     <h2>E-Wellness</h2>
@@ -91,6 +93,17 @@
                         </svg>
                     </span>
                     Reports
+                </a>
+
+                <a href="{{ url_for('import_data_page') }}" class="nav-link {% if active_page == 'import' %}active{% endif %}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <path d="M17 8l-5-5-5 5"></path>
+                            <path d="M12 3v12"></path>
+                        </svg>
+                    </span>
+                    Import Data
                 </a>
 
                 <a href="{{ url_for('security_page') }}" class="nav-link {% if active_page == 'security' %}active{% endif %}">

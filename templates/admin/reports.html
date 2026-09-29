@@ -131,7 +131,7 @@
                     {% for record in records %}
                     <tr>
                         <td>
-                            <strong>{{ record.patient_name }}</strong>
+                            <strong>{{ record.C }} {{ record.D }}</strong>
                         </td>
 
                         <td>
@@ -142,31 +142,33 @@
                             </div>
                         </td>
 
-                        <td>{{ record.temperature }} °C</td>
+                        <td>{{ record.J }} °C</td>
 
-                        <td>{{ record.heart_rate }} bpm</td>
+                        <td>{{ record.H }} bpm</td>
 
-                        <td>{{ record.oxygen_saturation }}%</td>
+                        <td>{{ record.I }}%</td>
 
-                        <td>{{ record.blood_pressure }}</td>
+                        <td>{{ record.G }}</td>
 
                         <td>
                             <div class="report-bmi-stack">
-                                <span>{{ record.bmi }}</span>
+                                <span>{{ record.M }}</span>
                                 <small>{{ record.bmi_category }}</small>
                             </div>
                         </td>
 
                         <td>
-                            {% if record.status == "Normal" %}
+                            {% set display_status = "Normal" if record.status == "Normal" or (record.status == "Needs Attention" and record.bmi_category == "Normal") else record.status %}
+                            {% if display_status == "Normal" %}
                             <span class="report-status-text normal">
-                                {{ record.status }}
+                                {{ display_status }}
                             </span>
                             {% else %}
                             <span class="report-status-text attention">
-                                {{ record.status }}
+                                {{ display_status }}
                             </span>
                             {% endif %}
+                            <small class="bmi-category">{{ record.bmi_category }}</small>
                         </td>
                     </tr>
                     {% endfor %}
@@ -183,3 +185,12 @@
 
 </div>
 {% endblock %}
+
+<style>
+.bmi-category {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+</style>

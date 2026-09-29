@@ -2,6 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, send_file,
 from datetime import datetime
 from io import BytesIO
 from functools import wraps
+import os
+import csv
+import json
+# pyrefly: ignore [missing-import]
+from dotenv import load_dotenv
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -11,97 +16,240 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
+# pyrefly: ignore [missing-import]
+from supabase import create_client, Client
+
 
 app = Flask(__name__)
 app.secret_key = "ewellness_frontend_demo_secret"
 
 
 # --------------------------------------------------
-# TEMPORARY SAMPLE DATA
+# SUPABASE CONFIGURATION
 # --------------------------------------------------
 
-patients = [
-    {
-        "id": 1,
-        "first_name": "Maria",
-        "last_name": "Santos",
-        "gender": "Female",
-        "birth_date": "2002-06-18",
-        "contact_no": "09171234567",
-        "barangay": "Lasang"
-    },
-    {
-        "id": 2,
-        "first_name": "Juan",
-        "last_name": "Dela Cruz",
-        "gender": "Male",
-        "birth_date": "1999-11-04",
-        "contact_no": "09181234567",
-        "barangay": "Lasang"
-    }
-]
+# Load environment variables
+load_dotenv()
 
-records = [
-    {
-        "id": 1,
-        "patient_id": 1,
-        "patient_name": "Maria Santos",
-        "temperature": 36.7,
-        "heart_rate": 78,
-        "oxygen_saturation": 98,
-        "blood_pressure": "118/76",
-        "height": 158,
-        "weight": 54,
-        "bmi": 21.6,
-        "bmi_category": "Normal",
-        "status": "Normal",
-        "remarks": "Vital signs are within normal range.",
-        "created_at": "2026-05-10 09:15 AM"
-    },
-    {
-        "id": 2,
-        "patient_id": 2,
-        "patient_name": "Juan Dela Cruz",
-        "temperature": 37.9,
-        "heart_rate": 105,
-        "oxygen_saturation": 94,
-        "blood_pressure": "142/92",
-        "height": 170,
-        "weight": 82,
-        "bmi": 28.4,
-        "bmi_category": "Overweight",
-        "status": "Needs Attention",
-        "remarks": "Abnormal readings detected. For health personnel review.",
-        "created_at": "2026-05-10 10:20 AM"
-    }
-]
+# Initialize Supabase
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_KEY")
 
-access_logs = [
-    {
-        "id": 1,
-        "user": "Clinic Admin",
-        "role": "System Admin",
-        "action": "Viewed dashboard summary",
-        "date_time": "2026-05-10 09:30 AM"
-    },
-    {
-        "id": 2,
-        "user": "Nurse Staff",
-        "role": "Health Personnel",
-        "action": "Added health record for Maria Santos",
-        "date_time": "2026-05-10 09:15 AM"
-    }
-]
+try:
+    if supabase_url and supabase_key:
+        supabase: Client = create_client(supabase_url, supabase_key)
+        print("Supabase initialized successfully")
+    else:
+        print("Supabase initialization error: Missing credentials")
+        print("Please ensure SUPABASE_URL and SUPABASE_KEY are set in .env file")
+        supabase = None
+except Exception as e:
+    print(f"Supabase initialization error: {e}")
+    print("Please ensure SUPABASE_URL and SUPABASE_KEY are set correctly in .env file")
+    supabase = None
 
-admin_users = [
-    {
-        "id": 1,
-        "full_name": "Clinic Admin",
-        "username": "admin",
-        "role": "System Admin",
-        "password_hash": generate_password_hash("admin123")
-    }
-]
+
+# --------------------------------------------------
+# SUPABASE HELPER FUNCTIONS
+# --------------------------------------------------
+
+def get_patients():
+    if supabase is None:
+        return []
+    try:
+        response = supabase.table('patients').select('*').execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting patients: {e}")
+        return []
+
+def get_patient_by_id(patient_id):
+    if supabase is None:
+        return None
+    try:
+        response = supabase.table('patients').select('*').eq('id', patient_id).execute()
+        if response.data:
+            return response.data[0]
+        return None
+    except Exception as e:
+        print(f"Error getting patient by id: {e}")
+        return None
+
+def add_patient(patient_data):
+    if supabase is None:
+        return None
+    try:
+        response = supabase.table('patients').insert(patient_data).execute()
+        if response.data:
+            return response.data[0]['id']
+        return None
+    except Exception as e:
+        print(f"Error adding patient: {e}")
+        return None
+
+def update_patient(patient_id, patient_data):
+    if supabase is None:
+        return False
+    try:
+        response = supabase.table('patients').update(patient_data).eq('id', patient_id).execute()
+        return len(response.data) > 0
+    except Exception as e:
+        print(f"Error updating patient: {e}")
+        return False
+
+def delete_patient(patient_id):
+    if supabase is None:
+        return False
+    try:
+        response = supabase.table('patients').delete().eq('id', patient_id).execute()
+        return len(response.data) > 0
+    except Exception as e:
+        print(f"Error deleting patient: {e}")
+        return False
+
+def get_records():
+    if supabase is None:
+        return []
+    try:
+        response = supabase.table('records').select('*').execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting records: {e}")
+        return []
+
+def get_records_for_patient(patient_id):
+    if supabase is None:
+        return []
+    try:
+        response = supabase.table('records').select('*').eq('patient_id', patient_id).execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting records for patient: {e}")
+        return []
+
+def add_record(record_data):
+    if supabase is None:
+        return None
+    try:
+        response = supabase.table('records').insert(record_data).execute()
+        if response.data:
+            return response.data[0]['id']
+        return None
+    except Exception as e:
+        print(f"Error adding record: {e}")
+        return None
+
+def get_admin_users():
+    if supabase is None:
+        return []
+    try:
+        response = supabase.table('admin_users').select('*').execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting admin users: {e}")
+        return []
+
+def get_admin_by_username(username):
+    if supabase is None:
+        return None
+    try:
+        response = supabase.table('admin_users').select('*').eq('username', username.lower()).execute()
+        if response.data:
+            return response.data[0]
+        return None
+    except Exception as e:
+        print(f"Error getting admin by username: {e}")
+        return None
+
+def get_admin_by_id(admin_id):
+    if supabase is None:
+        return None
+    try:
+        response = supabase.table('admin_users').select('*').eq('id', admin_id).execute()
+        if response.data:
+            return response.data[0]
+        return None
+    except Exception as e:
+        print(f"Error getting admin by id: {e}")
+        return None
+
+def add_admin_user(user_data):
+    if supabase is None:
+        return None
+    try:
+        response = supabase.table('admin_users').insert(user_data).execute()
+        if response.data:
+            return response.data[0]['id']
+        return None
+    except Exception as e:
+        print(f"Error adding admin user: {e}")
+        return None
+
+def update_admin_user(admin_id, user_data):
+    if supabase is None:
+        return False
+    try:
+        response = supabase.table('admin_users').update(user_data).eq('id', admin_id).execute()
+        return len(response.data) > 0
+    except Exception as e:
+        print(f"Error updating admin user: {e}")
+        return False
+
+def delete_admin_user(admin_id):
+    if supabase is None:
+        return False
+    try:
+        response = supabase.table('admin_users').delete().eq('id', admin_id).execute()
+        return len(response.data) > 0
+    except Exception as e:
+        print(f"Error deleting admin user: {e}")
+        return False
+
+def get_access_logs():
+    if supabase is None:
+        return []
+    try:
+        response = supabase.table('access_logs').select('*').order('date_time', desc=True).execute()
+        return response.data
+    except Exception as e:
+        print(f"Error getting access logs: {e}")
+        return []
+
+def add_access_log(user, role, action):
+    if supabase is None:
+        return None
+    try:
+        log_data = {
+            "user": user,
+            "role": role,
+            "action": action,
+            "date_time": datetime.now().strftime("%Y-%m-%d %I:%M %p")
+        }
+        response = supabase.table('access_logs').insert(log_data).execute()
+        if response.data:
+            return response.data[0]['id']
+        return None
+    except Exception as e:
+        print(f"Error adding access log: {e}")
+        return None
+
+def get_next_patient_id():
+    patients = get_patients()
+    if not patients:
+        return 1
+    return max(patient['id'] for patient in patients) + 1
+
+def get_next_record_id():
+    records = get_records()
+    if not records:
+        return 1
+    return max(record['id'] for record in records) + 1
+
+def get_next_admin_id():
+    admin_users = get_admin_users()
+    if not admin_users:
+        return 1
+    return max(user['id'] for user in admin_users) + 1
 
 
 # --------------------------------------------------
@@ -117,6 +265,16 @@ def calculate_bmi(height_cm, weight_kg):
     return round(bmi, 1)
 
 
+def calculate_age(birth_date):
+    try:
+        birth = datetime.strptime(birth_date, "%Y-%m-%d")
+        today = datetime.now()
+        age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+        return age
+    except:
+        return 0
+
+
 def get_bmi_category(bmi):
     if bmi <= 0:
         return "Invalid"
@@ -127,6 +285,44 @@ def get_bmi_category(bmi):
     if bmi < 30:
         return "Overweight"
     return "Obese"
+
+
+def get_detailed_status(temperature, heart_rate, oxygen_saturation, systolic, diastolic, bmi):
+    issues = []
+
+    # Check temperature
+    if temperature > 37.5:
+        issues.append("High Temp")
+    elif temperature < 36.0:
+        issues.append("Low Temp")
+
+    # Check heart rate
+    if heart_rate > 100:
+        issues.append("High HR")
+    elif heart_rate < 60:
+        issues.append("Low HR")
+
+    # Check oxygen saturation
+    if oxygen_saturation < 95:
+        issues.append("Low SpO2")
+
+    # Check blood pressure
+    if systolic > 140 or diastolic > 90:
+        issues.append("High BP")
+    elif systolic < 90 or diastolic < 60:
+        issues.append("Low BP")
+
+    # Check BMI
+    bmi_cat = get_bmi_category(bmi)
+    if bmi_cat != "Normal":
+        issues.append(bmi_cat)
+
+    # If no issues, return "Normal"
+    if not issues:
+        return "Normal"
+
+    # If there are issues, return them as comma-separated list
+    return ", ".join(issues)
 
 
 def get_record_status(temperature, heart_rate, oxygen_saturation, systolic, diastolic, bmi_category):
@@ -147,50 +343,17 @@ def get_record_status(temperature, heart_rate, oxygen_saturation, systolic, dias
 
 
 def get_patient_name(patient_id):
-    for patient in patients:
-        if patient["id"] == patient_id:
-            return f'{patient["first_name"]} {patient["last_name"]}'
-
+    patient = get_patient_by_id(patient_id)
+    if patient:
+        return f'{patient["first_name"]} {patient["last_name"]}'
     return "Unknown Patient"
-
-
-def get_patient_by_id(patient_id):
-    for patient in patients:
-        if patient["id"] == patient_id:
-            return patient
-
-    return None
-
-
-def get_records_for_patient(patient_id):
-    return [
-        record for record in records
-        if record["patient_id"] == patient_id
-    ]
-
-
-def add_access_log(user, role, action):
-    access_logs.append({
-        "id": len(access_logs) + 1,
-        "user": user,
-        "role": role,
-        "action": action,
-        "date_time": datetime.now().strftime("%Y-%m-%d %I:%M %p")
-    })
 
 
 def create_health_record(patient_id, temperature, heart_rate, oxygen_saturation, systolic, diastolic, height, weight):
     bmi = calculate_bmi(height, weight)
     bmi_category = get_bmi_category(bmi)
 
-    status = get_record_status(
-        temperature,
-        heart_rate,
-        oxygen_saturation,
-        systolic,
-        diastolic,
-        bmi_category
-    )
+    status = get_detailed_status(temperature, heart_rate, oxygen_saturation, systolic, diastolic, bmi)
 
     abnormal_reasons = []
 
@@ -221,40 +384,53 @@ def create_health_record(patient_id, temperature, heart_rate, oxygen_saturation,
     if bmi_category == "Obese":
         abnormal_reasons.append("obese BMI")
 
-    if status == "Needs Attention":
+    if status != "Normal":
         remarks = "Needs health personnel review due to " + ", ".join(abnormal_reasons) + "."
     else:
         remarks = "Vital signs and BMI are within normal range."
 
+    patient = get_patient_by_id(patient_id)
+    age = calculate_age(patient["birth_date"]) if patient else 0
+
     new_record = {
-        "id": len(records) + 1,
+        "id": get_next_record_id(),
         "patient_id": patient_id,
-        "patient_name": get_patient_name(patient_id),
-        "temperature": temperature,
-        "heart_rate": heart_rate,
-        "oxygen_saturation": oxygen_saturation,
-        "blood_pressure": f"{systolic}/{diastolic}",
-        "height": height,
-        "weight": weight,
-        "bmi": bmi,
+        "A": datetime.now().strftime("%Y-%m-%d"),  # Date
+        "B": datetime.now().strftime("%I:%M %p"),  # Time
+        "C": patient["first_name"] if patient else "",  # FirstName
+        "D": patient["last_name"] if patient else "",  # LastName
+        "E": age,  # Age
+        "F": patient["gender"] if patient else "",  # Gender
+        "G": f"{systolic}/{diastolic}",  # BloodPressure
+        "H": heart_rate,  # HeartRate_BPM
+        "I": oxygen_saturation,  # OxygenSaturation_pct
+        "J": temperature,  # BodyTemp_C
+        "K": weight,  # Weight_kg
+        "L": height,  # Height_cm
+        "M": bmi,  # BMI
         "bmi_category": bmi_category,
         "status": status,
         "remarks": remarks,
         "created_at": datetime.now().strftime("%Y-%m-%d %I:%M %p")
     }
 
-    records.append(new_record)
+    add_record(new_record)
     return new_record
 
 
 def dashboard_stats():
-    total_patients = len(patients)
-    total_records = len(records)
-    normal_records = len([record for record in records if record["status"] == "Normal"])
-    attention_records = len([record for record in records if record["status"] == "Needs Attention"])
+    patients_list = get_patients()
+    records_list = get_records()
+
+    total_patients = len(patients_list)
+    total_records = len(records_list)
+
+    # Count normal and attention records based on actual status from database
+    normal_records = len([record for record in records_list if record["status"] == "Normal"])
+    attention_records = len([record for record in records_list if record["status"] != "Normal"])
 
     if total_records > 0:
-        average_bmi = round(sum(record["bmi"] for record in records) / total_records, 1)
+        average_bmi = round(sum(record["M"] for record in records_list if record.get("M")) / total_records, 1)
     else:
         average_bmi = 0
 
@@ -269,12 +445,13 @@ def dashboard_stats():
 
 
 def bmi_trends():
+    records_list = get_records()
     labels = ["Underweight", "Normal", "Overweight", "Obese"]
-    total = len(records) if records else 1
+    total = len(records_list) if records_list else 1
     trend_data = []
 
     for label in labels:
-        count = len([record for record in records if record["bmi_category"] == label])
+        count = len([record for record in records_list if record["bmi_category"] == label])
         percentage = round((count / total) * 100)
 
         trend_data.append({
@@ -287,24 +464,29 @@ def bmi_trends():
 
 
 def bmi_chart_records():
+    records_list = get_records()
     return [
         {
-            "bmi": record["bmi"],
+            "bmi": record["M"],
             "category": record["bmi_category"],
             "created_at": record["created_at"],
-            "patient_name": record["patient_name"]
+            "patient_name": f"{record.get('C', '')} {record.get('D', '')}"
         }
-        for record in records
+        for record in records_list
     ]
 
 
 def status_trends():
+    records_list = get_records()
     labels = ["Normal", "Needs Attention"]
-    total = len(records) if records else 1
+    total = len(records_list) if records_list else 1
     trend_data = []
 
     for label in labels:
-        count = len([record for record in records if record["status"] == label])
+        if label == "Normal":
+            count = len([record for record in records_list if record["status"] == "Normal"])
+        else:
+            count = len([record for record in records_list if record["status"] != "Normal"])
         percentage = round((count / total) * 100)
 
         trend_data.append({
@@ -318,8 +500,9 @@ def status_trends():
 
 def ehr_patient_summaries():
     summaries = []
+    patients_list = get_patients()
 
-    for patient in patients:
+    for patient in patients_list:
         patient_records = get_records_for_patient(patient["id"])
         latest_record = patient_records[-1] if patient_records else None
 
@@ -353,31 +536,9 @@ def make_safe_filename(text):
 # ADMIN AUTHENTICATION HELPERS
 # --------------------------------------------------
 
-def get_admin_by_username(username):
-    for admin in admin_users:
-        if admin["username"].lower() == username.lower():
-            return admin
-
-    return None
-
-
-def get_admin_by_id(admin_id):
-    for admin in admin_users:
-        if admin["id"] == admin_id:
-            return admin
-
-    return None
-
-
-def get_next_admin_id():
-    if not admin_users:
-        return 1
-
-    return max(admin["id"] for admin in admin_users) + 1
-
-
 def username_exists(username, current_admin_id=None):
-    for admin in admin_users:
+    admin_users_list = get_admin_users()
+    for admin in admin_users_list:
         same_username = admin["username"].lower() == username.lower()
         different_user = current_admin_id is None or admin["id"] != current_admin_id
 
@@ -496,7 +657,7 @@ def signup_page():
                 "password_hash": generate_password_hash(password)
             }
 
-            admin_users.append(new_admin)
+            add_admin_user(new_admin)
 
             session["admin_id"] = new_admin["id"]
             session["admin_name"] = new_admin["full_name"]
@@ -546,7 +707,7 @@ def users_page():
         "admin/users.html",
         title="User Management",
         active_page="users",
-        admin_users=admin_users
+        admin_users=get_admin_users()
     )
 
 
@@ -580,7 +741,7 @@ def add_user_page():
                 "password_hash": generate_password_hash(password)
             }
 
-            admin_users.append(new_admin)
+            add_admin_user(new_admin)
 
             add_access_log(
                 user=get_current_admin_name(),
@@ -635,12 +796,16 @@ def edit_user_page(admin_id):
             old_name = admin["full_name"]
             old_role = admin["role"]
 
-            admin["full_name"] = full_name
-            admin["username"] = username
-            admin["role"] = role
+            update_data = {
+                "full_name": full_name,
+                "username": username,
+                "role": role
+            }
 
             if password:
-                admin["password_hash"] = generate_password_hash(password)
+                update_data["password_hash"] = generate_password_hash(password)
+
+            update_admin_user(admin_id, update_data)
 
             if session.get("admin_id") == admin_id:
                 session["admin_name"] = full_name
@@ -678,8 +843,9 @@ def delete_user_page(admin_id):
         flash("You cannot delete your own logged-in account.", "warning")
         return redirect(url_for("users_page"))
 
+    admin_users_list = get_admin_users()
     system_admin_count = len([
-        user for user in admin_users
+        user for user in admin_users_list
         if user["role"] == "System Admin"
     ])
 
@@ -690,7 +856,7 @@ def delete_user_page(admin_id):
     deleted_name = admin["full_name"]
     deleted_role = admin["role"]
 
-    admin_users.remove(admin)
+    delete_admin_user(admin_id)
 
     add_access_log(
         user=get_current_admin_name(),
@@ -1221,7 +1387,7 @@ def kiosk_summary_submit_page():
             return redirect(url_for("kiosk_summary_page"))
 
     new_patient = {
-        "id": len(patients) + 1,
+        "id": get_next_patient_id(),
         "first_name": kiosk_patient.get("first_name", "").strip(),
         "last_name": kiosk_patient.get("last_name", "").strip(),
         "gender": kiosk_patient.get("gender", "Not specified"),
@@ -1230,7 +1396,7 @@ def kiosk_summary_submit_page():
         "barangay": kiosk_patient.get("barangay", "").strip()
     }
 
-    patients.append(new_patient)
+    add_patient(new_patient)
 
     temperature = float(kiosk_results["temperature"]["value"])
     blood_pressure = kiosk_results["blood_pressure"]
@@ -1255,7 +1421,7 @@ def kiosk_summary_submit_page():
     add_access_log(
         user="Kiosk Patient",
         role="Patient Kiosk",
-        action=f'Submitted kiosk health assessment for {new_record["patient_name"]}'
+        action=f'Submitted kiosk health assessment for {new_record["C"]} {new_record["D"]}'
     )
 
     session.pop("kiosk_patient", None)
@@ -1280,12 +1446,17 @@ def kiosk_complete_page():
 @app.route("/")
 @login_required
 def dashboard():
+    records_list = get_records()
+
+    # Get all records in reverse order (newest first)
+    latest_records = list(reversed(records_list))
+
     return render_template(
         "admin/dashboard.html",
         title="Dashboard",
         active_page="dashboard",
         stats=dashboard_stats(),
-        latest_records=list(reversed(records[-5:])),
+        latest_records=latest_records,
         bmi_trends=bmi_trends(),
         status_trends=status_trends(),
         bmi_chart_records=bmi_chart_records()
@@ -1296,17 +1467,22 @@ def dashboard():
 @login_required
 def patients_page():
     search = request.args.get("search", "").lower().strip()
+    patients_list = get_patients()
+
+    # Add age to each patient
+    for patient in patients_list:
+        patient["age"] = calculate_age(patient.get("birth_date", ""))
 
     if search:
         filtered_patients = [
-            patient for patient in patients
+            patient for patient in patients_list
             if search in f'{patient["first_name"]} {patient["last_name"]}'.lower()
             or search in patient["barangay"].lower()
             or search in patient["gender"].lower()
             or search in patient["contact_no"].lower()
         ]
     else:
-        filtered_patients = patients
+        filtered_patients = patients_list
 
     return render_template(
         "admin/patients.html",
@@ -1321,29 +1497,50 @@ def patients_page():
 @login_required
 def add_patient_page():
     if request.method == "POST":
+        # Calculate birth date from age
+        age = int(request.form.get("age", 0))
+        current_year = datetime.now().year
+        birth_year = current_year - age
+        birth_date = f"{birth_year}-01-01"  # Default to January 1st
+
         new_patient = {
-            "id": len(patients) + 1,
+            "id": get_next_patient_id(),
             "first_name": request.form.get("first_name", "").strip(),
             "last_name": request.form.get("last_name", "").strip(),
             "gender": request.form.get("gender", "").strip(),
-            "birth_date": request.form.get("birth_date", "").strip(),
-            "contact_no": request.form.get("contact_no", "").strip(),
-            "barangay": request.form.get("barangay", "").strip()
+            "birth_date": birth_date,
+            "contact_no": "",
+            "barangay": ""
         }
 
-        patients.append(new_patient)
+        add_patient(new_patient)
 
-        temperature = float(request.form.get("temperature"))
+        # Parse blood pressure (format: "120/80")
+        blood_pressure = request.form.get("blood_pressure", "").strip()
+        try:
+            bp_parts = blood_pressure.split("/")
+            systolic = int(bp_parts[0]) if len(bp_parts) > 0 else 0
+            diastolic = int(bp_parts[1]) if len(bp_parts) > 1 else 0
+        except:
+            systolic = 0
+            diastolic = 0
+
+        body_temp = float(request.form.get("body_temp"))
         heart_rate = int(request.form.get("heart_rate"))
         oxygen_saturation = int(request.form.get("oxygen_saturation"))
-        systolic = int(request.form.get("systolic"))
-        diastolic = int(request.form.get("diastolic"))
         height = float(request.form.get("height"))
         weight = float(request.form.get("weight"))
+        bmi_input = request.form.get("bmi", "").strip()
+
+        # Calculate BMI if not provided
+        if bmi_input:
+            bmi = float(bmi_input)
+        else:
+            bmi = calculate_bmi(height, weight)
 
         new_record = create_health_record(
             patient_id=new_patient["id"],
-            temperature=temperature,
+            temperature=body_temp,
             heart_rate=heart_rate,
             oxygen_saturation=oxygen_saturation,
             systolic=systolic,
@@ -1355,7 +1552,7 @@ def add_patient_page():
         add_access_log(
             user=get_current_admin_name(),
             role=get_current_admin_role(),
-            action=f'Added patient manually with initial health record for {new_record["patient_name"]}'
+            action=f'Added patient manually with initial health record for {new_patient["first_name"]} {new_patient["last_name"]}'
         )
 
         flash("Patient and initial health record saved successfully.", "success")
@@ -1458,10 +1655,16 @@ def download_patient_history(patient_id):
     latest_record = patient_records[0] if patient_records else None
 
     if latest_record:
+        # Display status - if normal or needs attention with normal BMI, show "Normal"
+        if latest_record["status"] == "Normal" or (latest_record["status"] == "Needs Attention" and latest_record["bmi_category"] == "Normal"):
+            display_status = "Normal"
+        else:
+            display_status = latest_record["status"]
+
         summary_info = f"""
         <b>Total Records:</b> {total_records}<br/>
         <b>Latest BMI:</b> {latest_record["bmi"]} ({latest_record["bmi_category"]})<br/>
-        <b>Latest Status:</b> {latest_record["status"]}<br/>
+        <b>Latest Status:</b> {display_status}<br/>
         <b>Latest Record Date:</b> {latest_record["created_at"]}
         """
     else:
@@ -1505,11 +1708,17 @@ def download_patient_history(patient_id):
                 f'{record["bmi_category"]}'
             )
 
+            # Display status - if normal or needs attention with normal BMI, show "Normal"
+            if record["status"] == "Normal" or (record["status"] == "Needs Attention" and record["bmi_category"] == "Normal"):
+                display_status = "Normal"
+            else:
+                display_status = record["status"]
+
             table_data.append([
                 Paragraph(str(record["created_at"]), normal_style),
                 Paragraph(vitals, normal_style),
                 Paragraph(bmi, normal_style),
-                Paragraph(str(record["status"]), normal_style),
+                Paragraph(display_status, normal_style),
                 Paragraph(str(record["remarks"]), normal_style)
             ])
 
@@ -1604,7 +1813,7 @@ def add_health_record_page():
         add_access_log(
             user=get_current_admin_name(),
             role=get_current_admin_role(),
-            action=f'Added follow-up health record for {new_record["patient_name"]}'
+            action=f'Added follow-up health record for {new_record["C"]} {new_record["D"]}'
         )
 
         flash("Health record added successfully.", "success")
@@ -1631,6 +1840,7 @@ def add_health_record_page():
 @app.route("/reports")
 @login_required
 def reports_page():
+    records_list = get_records()
     return render_template(
         "admin/reports.html",
         title="Reports and Analytics",
@@ -1639,7 +1849,7 @@ def reports_page():
         bmi_trends=bmi_trends(),
         status_trends=status_trends(),
         bmi_chart_records=bmi_chart_records(),
-        records=list(reversed(records))
+        records=list(reversed(records_list))
     )
 
 
@@ -1650,8 +1860,376 @@ def security_page():
         "admin/security.html",
         title="Security and Audit Logs",
         active_page="security",
-        logs=list(reversed(access_logs))
+        logs=get_access_logs()
     )
+
+
+# --------------------------------------------------
+# DATA IMPORT ROUTES
+# --------------------------------------------------
+
+@app.route("/import")
+@login_required
+def import_data_page():
+    return render_template(
+        "admin/import_data.html",
+        title="Import Data",
+        active_page="import"
+    )
+
+
+@app.route("/import/kiosk", methods=["POST"])
+@login_required
+def import_kiosk_data():
+    if "file" not in request.files:
+        flash("No file selected.", "error")
+        return redirect(url_for("import_data_page"))
+
+    file = request.files["file"]
+    if file.filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("import_data_page"))
+
+    try:
+        if file.filename.endswith(".json"):
+            imported_count = import_kiosk_json(file)
+            flash(f"Successfully imported {imported_count} kiosk records.", "success")
+        else:
+            flash("Invalid file format. Please upload JSON.", "error")
+            return redirect(url_for("import_data_page"))
+
+        add_access_log(
+            user=get_current_admin_name(),
+            role=get_current_admin_role(),
+            action=f"Imported {imported_count} kiosk records from {file.filename}"
+        )
+
+    except Exception as e:
+        flash(f"Error importing kiosk data: {str(e)}", "error")
+        return redirect(url_for("import_data_page"))
+
+    return redirect(url_for("import_data_page"))
+
+
+@app.route("/import/patients", methods=["POST"])
+@login_required
+def import_patients():
+    if "file" not in request.files:
+        flash("No file selected.", "error")
+        return redirect(url_for("import_data_page"))
+
+    file = request.files["file"]
+    if file.filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("import_data_page"))
+
+    try:
+        if file.filename.endswith(".csv"):
+            imported_count = import_patients_from_csv(file)
+            flash(f"Successfully imported {imported_count} patients from CSV.", "success")
+        elif file.filename.endswith(".json"):
+            imported_count = import_patients_from_json(file)
+            flash(f"Successfully imported {imported_count} patients from JSON.", "success")
+        else:
+            flash("Invalid file format. Please upload CSV or JSON.", "error")
+            return redirect(url_for("import_data_page"))
+
+        add_access_log(
+            user=get_current_admin_name(),
+            role=get_current_admin_role(),
+            action=f"Imported {imported_count} patients from {file.filename}"
+        )
+
+    except Exception as e:
+        flash(f"Error importing patients: {str(e)}", "error")
+        return redirect(url_for("import_data_page"))
+
+    return redirect(url_for("import_data_page"))
+
+
+@app.route("/import/records", methods=["POST"])
+@login_required
+def import_records():
+    if "file" not in request.files:
+        flash("No file selected.", "error")
+        return redirect(url_for("import_data_page"))
+
+    file = request.files["file"]
+    if file.filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("import_data_page"))
+
+    try:
+        if file.filename.endswith(".csv"):
+            imported_count = import_records_from_csv(file)
+            flash(f"Successfully imported {imported_count} health records from CSV.", "success")
+        elif file.filename.endswith(".json"):
+            imported_count = import_records_from_json(file)
+            flash(f"Successfully imported {imported_count} health records from JSON.", "success")
+        else:
+            flash("Invalid file format. Please upload CSV or JSON.", "error")
+            return redirect(url_for("import_data_page"))
+
+        add_access_log(
+            user=get_current_admin_name(),
+            role=get_current_admin_role(),
+            action=f"Imported {imported_count} health records from {file.filename}"
+        )
+
+    except Exception as e:
+        flash(f"Error importing health records: {str(e)}", "error")
+        return redirect(url_for("import_data_page"))
+
+    return redirect(url_for("import_data_page"))
+
+
+def import_patients_from_csv(file):
+    imported_count = 0
+    patients_list = get_patients()
+    existing_ids = {p["id"] for p in patients_list}
+    max_id = max(existing_ids) if existing_ids else 0
+
+    csv_reader = csv.DictReader(file.read().decode("utf-8").splitlines())
+    for row in csv_reader:
+        max_id += 1
+        new_patient = {
+            "id": max_id,
+            "first_name": row.get("first_name", "").strip(),
+            "last_name": row.get("last_name", "").strip(),
+            "gender": row.get("gender", "Not specified").strip(),
+            "birth_date": row.get("birth_date", "").strip(),
+            "contact_no": row.get("contact_no", "").strip(),
+            "barangay": row.get("barangay", "").strip()
+        }
+        add_patient(new_patient)
+        imported_count += 1
+
+    return imported_count
+
+
+def import_patients_from_json(file):
+    imported_count = 0
+    data = json.load(file)
+    patients_list = get_patients()
+    existing_ids = {p["id"] for p in patients_list}
+    max_id = max(existing_ids) if existing_ids else 0
+
+    for patient_data in data:
+        max_id += 1
+        new_patient = {
+            "id": max_id,
+            "first_name": patient_data.get("first_name", "").strip(),
+            "last_name": patient_data.get("last_name", "").strip(),
+            "gender": patient_data.get("gender", "Not specified").strip(),
+            "birth_date": patient_data.get("birth_date", "").strip(),
+            "contact_no": patient_data.get("contact_no", "").strip(),
+            "barangay": patient_data.get("barangay", "").strip()
+        }
+        add_patient(new_patient)
+        imported_count += 1
+
+    return imported_count
+
+
+def import_records_from_csv(file):
+    imported_count = 0
+    records_list = get_records()
+    existing_ids = {r["id"] for r in records_list}
+    max_id = max(existing_ids) if existing_ids else 0
+
+    csv_reader = csv.DictReader(file.read().decode("utf-8").splitlines())
+    for row in csv_reader:
+        max_id += 1
+        patient_id = int(row.get("patient_id", 0))
+        patient = get_patient_by_id(patient_id)
+
+        if not patient:
+            continue
+
+        temperature = float(row.get("temperature", 0))
+        heart_rate = int(row.get("heart_rate", 0))
+        oxygen_saturation = int(row.get("oxygen_saturation", 0))
+        systolic = int(row.get("systolic", 0))
+        diastolic = int(row.get("diastolic", 0))
+        height = float(row.get("height", 0))
+        weight = float(row.get("weight", 0))
+
+        new_record = create_health_record(
+            patient_id=patient_id,
+            temperature=temperature,
+            heart_rate=heart_rate,
+            oxygen_saturation=oxygen_saturation,
+            systolic=systolic,
+            diastolic=diastolic,
+            height=height,
+            weight=weight
+        )
+        imported_count += 1
+
+    return imported_count
+
+
+def import_records_from_json(file):
+    imported_count = 0
+    data = json.load(file)
+    records_list = get_records()
+    existing_ids = {r["id"] for r in records_list}
+    max_id = max(existing_ids) if existing_ids else 0
+
+    for record_data in data:
+        max_id += 1
+        patient_id = int(record_data.get("patient_id", 0))
+        patient = get_patient_by_id(patient_id)
+
+        if not patient:
+            continue
+
+        temperature = float(record_data.get("temperature", 0))
+        heart_rate = int(record_data.get("heart_rate", 0))
+        oxygen_saturation = int(record_data.get("oxygen_saturation", 0))
+        systolic = int(record_data.get("systolic", 0))
+        diastolic = int(record_data.get("diastolic", 0))
+        height = float(record_data.get("height", 0))
+        weight = float(record_data.get("weight", 0))
+
+        new_record = create_health_record(
+            patient_id=patient_id,
+            temperature=temperature,
+            heart_rate=heart_rate,
+            oxygen_saturation=oxygen_saturation,
+            systolic=systolic,
+            diastolic=diastolic,
+            height=height,
+            weight=weight
+        )
+        imported_count += 1
+
+    return imported_count
+
+
+def import_kiosk_json(file):
+    imported_count = 0
+    data = json.load(file)
+
+    # Handle both single record and array of records
+    if isinstance(data, dict):
+        data = [data]
+
+    patients_list = get_patients()
+    records_list = get_records()
+    existing_patient_ids = {p["id"] for p in patients_list}
+    max_patient_id = max(existing_patient_ids) if existing_patient_ids else 0
+    existing_record_ids = {r["id"] for r in records_list}
+    max_record_id = max(existing_record_ids) if existing_record_ids else 0
+
+    for record in data:
+        # Parse kiosk format with letter keys
+        first_name = record.get("C", "").strip()
+        last_name = record.get("D", "").strip()
+        age_str = record.get("E", "0")
+        gender = record.get("F", "").strip()
+        blood_pressure = record.get("G", "").strip()
+        heart_rate_str = record.get("H", "0")
+        oxygen_saturation_str = record.get("I", "0")
+        body_temp_str = record.get("J", "0")
+        weight_str = record.get("K", "0")
+        height_str = record.get("L", "0")
+        bmi_str = record.get("M", "0")
+
+        # Skip header rows (if values are field names)
+        if age_str == "Age" or first_name == "FirstName":
+            continue
+
+        # Convert to appropriate types with error handling
+        try:
+            age = int(age_str)
+        except:
+            age = 0
+
+        try:
+            heart_rate = int(heart_rate_str)
+        except:
+            heart_rate = 0
+
+        try:
+            oxygen_saturation = int(oxygen_saturation_str)
+        except:
+            oxygen_saturation = 0
+
+        try:
+            body_temp = float(body_temp_str)
+        except:
+            body_temp = 0.0
+
+        try:
+            weight = float(weight_str)
+        except:
+            weight = 0.0
+
+        try:
+            height = float(height_str)
+        except:
+            height = 0.0
+
+        try:
+            bmi = float(bmi_str)
+        except:
+            bmi = 0.0
+
+        # Check if patient already exists (by name)
+        existing_patient = None
+        for patient in patients_list:
+            if patient["first_name"] == first_name and patient["last_name"] == last_name:
+                existing_patient = patient
+                break
+
+        if not existing_patient:
+            # Create new patient
+            max_patient_id += 1
+            # Calculate birth date from age
+            current_year = datetime.now().year
+            birth_year = current_year - age
+            birth_date = f"{birth_year}-01-01"  # Default to January 1st
+
+            new_patient = {
+                "id": max_patient_id,
+                "first_name": first_name,
+                "last_name": last_name,
+                "gender": gender,
+                "birth_date": birth_date,
+                "contact_no": "",
+                "barangay": ""
+            }
+            add_patient(new_patient)
+            patients_list.append(new_patient)
+            patient_id = max_patient_id
+        else:
+            patient_id = existing_patient["id"]
+
+        # Parse blood pressure (format: "120/80")
+        try:
+            bp_parts = blood_pressure.split("/")
+            systolic = int(bp_parts[0]) if len(bp_parts) > 0 else 0
+            diastolic = int(bp_parts[1]) if len(bp_parts) > 1 else 0
+        except:
+            systolic = 0
+            diastolic = 0
+
+        # Create health record
+        max_record_id += 1
+        new_record = create_health_record(
+            patient_id=patient_id,
+            temperature=body_temp,
+            heart_rate=heart_rate,
+            oxygen_saturation=oxygen_saturation,
+            systolic=systolic,
+            diastolic=diastolic,
+            height=height,
+            weight=weight
+        )
+        imported_count += 1
+
+    return imported_count
 
 
 # --------------------------------------------------
@@ -1672,13 +2250,13 @@ def api_dashboard_data():
 @app.route("/api/records")
 @login_required
 def api_records():
-    return jsonify(records)
+    return jsonify(get_records())
 
 
 @app.route("/api/patients")
 @login_required
 def api_patients():
-    return jsonify(patients)
+    return jsonify(get_patients())
 
 
 if __name__ == "__main__":

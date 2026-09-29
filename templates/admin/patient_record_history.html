@@ -100,13 +100,13 @@
             class="phr-record-card patient-record-row"
             data-search="
                 {{ record.created_at }}
-                {{ record.temperature }}
-                {{ record.heart_rate }}
-                {{ record.oxygen_saturation }}
-                {{ record.blood_pressure }}
-                {{ record.height }}
-                {{ record.weight }}
-                {{ record.bmi }}
+                {{ record.J }}
+                {{ record.H }}
+                {{ record.I }}
+                {{ record.G }}
+                {{ record.L }}
+                {{ record.K }}
+                {{ record.M }}
                 {{ record.bmi_category }}
                 {{ record.status }}
                 {{ record.remarks }}
@@ -133,37 +133,37 @@
             <div class="phr-vitals-grid">
                 <div class="phr-vital-item">
                     <span>Temperature</span>
-                    <strong>{{ record.temperature }} °C</strong>
+                    <strong>{{ record.J }} °C</strong>
                 </div>
 
                 <div class="phr-vital-item">
                     <span>Heart Rate</span>
-                    <strong>{{ record.heart_rate }} bpm</strong>
+                    <strong>{{ record.H }} bpm</strong>
                 </div>
 
                 <div class="phr-vital-item">
                     <span>SpO2</span>
-                    <strong>{{ record.oxygen_saturation }}%</strong>
+                    <strong>{{ record.I }}%</strong>
                 </div>
 
                 <div class="phr-vital-item">
                     <span>Blood Pressure</span>
-                    <strong>{{ record.blood_pressure }}</strong>
+                    <strong>{{ record.G }}</strong>
                 </div>
 
                 <div class="phr-vital-item">
                     <span>Height</span>
-                    <strong>{{ record.height }} cm</strong>
+                    <strong>{{ record.L }} cm</strong>
                 </div>
 
                 <div class="phr-vital-item">
                     <span>Weight</span>
-                    <strong>{{ record.weight }} kg</strong>
+                    <strong>{{ record.K }} kg</strong>
                 </div>
 
                 <div class="phr-vital-item">
                     <span>BMI</span>
-                    <strong>{{ record.bmi }}</strong>
+                    <strong>{{ record.M }}</strong>
                     <small>{{ record.bmi_category }}</small>
                 </div>
             </div>

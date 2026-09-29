@@ -1,0 +1,176 @@
+{% extends "layouts/base.html" %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Import Data from SD Card</h1>
+    <p>Upload CSV or JSON files from your kiosk SD card to import patient data and health records.</p>
+</div>
+
+<div class="import-container">
+    <div class="import-section">
+        <h2>Import Kiosk Data (JSON)</h2>
+        <p>Upload a JSON file from your kiosk SD card containing health records with patient information.</p>
+
+        <form action="{{ url_for('import_kiosk_data') }}" method="POST" enctype="multipart/form-data" class="import-form">
+            <div class="form-group">
+                <label for="kiosk_file">Select JSON File</label>
+                <input type="file" id="kiosk_file" name="file" accept=".json" required>
+                <small>JSON format: Date, Time, FirstName, LastName, Age, Gender, BloodPressure, HeartRate_BPM, OxygenSaturation_pct, BodyTemp_C, Weight_kg, Height_cm, BMI</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Import Kiosk Data</button>
+        </form>
+    </div>
+</div>
+
+<div class="import-help">
+    <h3>Kiosk JSON Format</h3>
+    
+    <h4>Single Record Format:</h4>
+    <pre>{
+  "A": "Date",
+  "B": "Time",
+  "C": "FirstName",
+  "D": "LastName",
+  "E": "Age",
+  "F": "Gender",
+  "G": "BloodPressure",
+  "H": "HeartRate_BPM",
+  "I": "OxygenSaturation_pct",
+  "J": "BodyTemp_C",
+  "K": "Weight_kg",
+  "L": "Height_cm",
+  "M": "BMI"
+}</pre>
+    
+    <h4>Multiple Records Format:</h4>
+    <pre>[
+  {
+    "A": "2026-05-31",
+    "B": "09:00",
+    "C": "Maria",
+    "D": "Santos",
+    "E": 24,
+    "F": "Female",
+    "G": "120/80",
+    "H": 78,
+    "I": 98,
+    "J": 36.7,
+    "K": 54,
+    "L": 158,
+    "M": 21.6
+  },
+  {
+    "A": "2026-05-31",
+    "B": "10:00",
+    "C": "Juan",
+    "D": "Dela Cruz",
+    "E": 27,
+    "F": "Male",
+    "G": "118/76",
+    "H": 72,
+    "I": 99,
+    "J": 36.5,
+    "K": 70,
+    "L": 170,
+    "M": 24.2
+  }
+]</pre>
+</div>
+
+<style>
+.import-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.import-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.import-section h2 {
+    margin-top: 0;
+    color: #2563eb;
+}
+
+.import-section p {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+}
+
+.import-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input[type="file"] {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+}
+
+.form-group small {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.import-help {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 2rem 0;
+}
+
+.import-help h3 {
+    margin-top: 0;
+    color: #2563eb;
+}
+
+.import-help h4 {
+    color: #374151;
+    margin-top: 1.5rem;
+}
+
+.import-help pre {
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem;
+}
+</style>
+
+{% endblock %}

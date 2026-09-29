@@ -6,3 +6,6 @@ venv/
 instance/
 *.db
 .DS_Store
+service-account-key*.json
+*-key.json
+service-account-key.json

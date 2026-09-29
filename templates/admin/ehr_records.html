@@ -71,23 +71,46 @@
                     <td>
                         {% if item.latest_record %}
                             <div class="bmi-stack">
-                                <span>{{ item.latest_record.bmi }}</span>
-                                <small>{{ item.latest_record.bmi_category }}</small>
+                                <span>{{ item.latest_record.M }}</span>
+                                <small class="bmi-pill bmi-{{ item.latest_record.bmi_category | lower | replace(' ', '-') }}">
+                                    {{ item.latest_record.bmi_category }}
+                                </small>
                             </div>
                         {% else %}
-                            <span class="muted-text">No BMI yet</span>
+                            <span class="muted-text">—</span>
                         {% endif %}
                     </td>
 
                     <td>
                         {% if item.latest_record %}
-                            <span class="ehr-status-text {% if item.latest_record.status == 'Normal' %}normal{% else %}attention{% endif %}">
-                                {{ item.latest_record.status }}
-                            </span>
+                            {% if item.latest_record.status == "Normal" %}
+                                <span class="badge normal">✓ Normal</span>
+                            {% else %}
+                                <div class="issue-tags">
+                                    {% for issue in item.latest_record.status.split(',') %}
+                                        {% set tag = issue.strip() %}
+                                        {% if 'Temp' in tag %}
+                                            <span class="issue-tag tag-temp">🌡 {{ tag }}</span>
+                                        {% elif 'HR' in tag or 'Heart' in tag %}
+                                            <span class="issue-tag tag-hr">❤ {{ tag }}</span>
+                                        {% elif 'SpO2' in tag or 'Oxygen' in tag %}
+                                            <span class="issue-tag tag-spo2">💧 {{ tag }}</span>
+                                        {% elif 'BP' in tag or 'Pressure' in tag %}
+                                            <span class="issue-tag tag-bp">🩺 {{ tag }}</span>
+                                        {% elif 'Overweight' in tag %}
+                                            <span class="issue-tag tag-bmi-over">⚖ Overweight</span>
+                                        {% elif 'Obese' in tag %}
+                                            <span class="issue-tag tag-bmi-obese">⚖ Obese</span>
+                                        {% elif 'Underweight' in tag %}
+                                            <span class="issue-tag tag-bmi-under">⚖ Underweight</span>
+                                        {% else %}
+                                            <span class="issue-tag tag-other">⚠ {{ tag }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         {% else %}
-                            <span class="ehr-status-text neutral">
-                                No Record
-                            </span>
+                            <span class="muted-text">—</span>
                         {% endif %}
                     </td>
 
@@ -111,3 +134,48 @@
     </div>
 </section>
 {% endblock %}
+
+<style>
+/* ---- Issue Tags (specific vital sign alerts) ---- */
+.issue-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.issue-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.71rem;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+.tag-temp      { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+.tag-hr        { background: #fce4ec; color: #b71c1c; border: 1px solid #f48fb1; }
+.tag-spo2      { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+.tag-bp        { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+.tag-bmi-over  { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+.tag-bmi-obese { background: #fbe9e7; color: #bf360c; border: 1px solid #ffab91; }
+.tag-bmi-under { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+.tag-other     { background: #f5f5f5; color: #424242; border: 1px solid #bdbdbd; }
+
+/* ---- BMI category pill inside the BMI column ---- */
+.bmi-pill {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.bmi-normal      { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.bmi-underweight { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+.bmi-overweight  { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+.bmi-obese       { background: #fbe9e7; color: #bf360c; border: 1px solid #ffab91; }
+</style>

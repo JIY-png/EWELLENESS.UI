@@ -134,8 +134,8 @@
         <a class="small-link" href="{{ url_for('ehr_records_page') }}">View all</a>
     </div>
 
-    <div class="table-wrapper">
-        <table>
+    <div class="table-wrapper scrollable-table">
+        <table id="dashboardRecordsTable" style="width: 100%; min-width: 800px; table-layout: fixed; border-collapse: collapse;">
             <thead>
                 <tr>
                     <th>Patient</th>
@@ -150,15 +150,38 @@
             <tbody>
                 {% for record in latest_records %}
                 <tr>
-                    <td>{{ record.patient_name }}</td>
-                    <td>{{ record.temperature }} °C</td>
-                    <td>{{ record.heart_rate }} bpm</td>
-                    <td>{{ record.oxygen_saturation }}%</td>
-                    <td>{{ record.bmi }}</td>
+                    <td>{{ record.C }} {{ record.D }}</td>
+                    <td>{{ record.J }} °C</td>
+                    <td>{{ record.H }} bpm</td>
+                    <td>{{ record.I }}%</td>
+                    <td>{{ record.M }}</td>
                     <td>
-                        <span class="badge {% if record.status == 'Normal' %}normal{% else %}attention{% endif %}">
-                            {{ record.status }}
-                        </span>
+                        {% if record.status == "Normal" %}
+                            <span class="badge normal">Normal</span>
+                        {% else %}
+                            <div class="issue-tags">
+                                {% for issue in record.status.split(',') %}
+                                    {% set tag = issue.strip() %}
+                                    {% if 'Temp' in tag %}
+                                        <span class="issue-tag tag-temp">🌡 {{ tag }}</span>
+                                    {% elif 'HR' in tag or 'Heart' in tag %}
+                                        <span class="issue-tag tag-hr">❤ {{ tag }}</span>
+                                    {% elif 'SpO2' in tag or 'Oxygen' in tag %}
+                                        <span class="issue-tag tag-spo2">💧 {{ tag }}</span>
+                                    {% elif 'BP' in tag or 'Pressure' in tag %}
+                                        <span class="issue-tag tag-bp">🩺 {{ tag }}</span>
+                                    {% elif 'Overweight' in tag %}
+                                        <span class="issue-tag tag-bmi-over">⚖ Overweight</span>
+                                    {% elif 'Obese' in tag %}
+                                        <span class="issue-tag tag-bmi-obese">⚖ Obese</span>
+                                    {% elif 'Underweight' in tag %}
+                                        <span class="issue-tag tag-bmi-under">⚖ Underweight</span>
+                                    {% else %}
+                                        <span class="issue-tag tag-other">⚠ {{ tag }}</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -168,3 +191,104 @@
 </section>
 
 {% endblock %}
+
+<style>
+.bmi-category {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Force the wrapper to hide the scrollbar and contain the table */
+.scrollable-table {
+    max-height: 400px;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Force the table to respect strict column widths */
+.scrollable-table table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+}
+
+.scrollable-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: white;
+}
+
+/* Force all cells to allow wrapping instead of squishing */
+.scrollable-table th,
+.scrollable-table td {
+    padding: 12px 10px !important;
+    text-align: left !important;
+    white-space: normal !important; /* Overrides any nowrap */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    vertical-align: middle !important;
+}
+
+/* --- Strict Column Widths --- */
+/* Override global .large-panel table rules with higher specificity */
+.large-panel #dashboardRecordsTable th:nth-child(1),
+.large-panel #dashboardRecordsTable td:nth-child(1) { width: 25% !important; }
+
+.large-panel #dashboardRecordsTable th:nth-child(2),
+.large-panel #dashboardRecordsTable td:nth-child(2) { width: 12% !important; }
+
+.large-panel #dashboardRecordsTable th:nth-child(3),
+.large-panel #dashboardRecordsTable td:nth-child(3) { width: 12% !important; }
+
+.large-panel #dashboardRecordsTable th:nth-child(4),
+.large-panel #dashboardRecordsTable td:nth-child(4) { width: 10% !important; }
+
+.large-panel #dashboardRecordsTable th:nth-child(5),
+.large-panel #dashboardRecordsTable td:nth-child(5) { width: 10% !important; }
+
+.large-panel #dashboardRecordsTable th:nth-child(6),
+.large-panel #dashboardRecordsTable td:nth-child(6) { width: 37% !important; }
+
+/* --- Issue Tags --- */
+.issue-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.issue-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+/* Temperature */
+.tag-temp    { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+/* Heart Rate */
+.tag-hr      { background: #fce4ec; color: #b71c1c; border: 1px solid #f48fb1; }
+/* SpO2 / Oxygen */
+.tag-spo2    { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+/* Blood Pressure */
+.tag-bp      { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+/* BMI overweight */
+.tag-bmi-over  { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+/* BMI obese */
+.tag-bmi-obese { background: #fbe9e7; color: #bf360c; border: 1px solid #ffab91; }
+/* BMI underweight */
+.tag-bmi-under { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+/* Other / fallback */
+.tag-other   { background: #f5f5f5; color: #424242; border: 1px solid #bdbdbd; }
+</style>
