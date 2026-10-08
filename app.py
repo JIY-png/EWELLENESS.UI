@@ -337,8 +337,6 @@ def get_detailed_status(temperature, heart_rate, oxygen_saturation, systolic, di
     # Check temperature
     if temperature > 37.5:
         issues.append("High Temp")
-    elif temperature < 36.0:
-        issues.append("Low Temp")
 
     # Check heart rate
     if heart_rate > 100:
@@ -371,7 +369,7 @@ def get_detailed_status(temperature, heart_rate, oxygen_saturation, systolic, di
 
 def get_record_status(temperature, heart_rate, oxygen_saturation, systolic, diastolic, bmi_category):
     abnormal_vitals = (
-        temperature < 36.0 or temperature > 37.5 or
+        temperature > 37.5 or
         heart_rate < 60 or heart_rate > 100 or
         oxygen_saturation < 95 or
         systolic >= 140 or
@@ -400,9 +398,6 @@ def create_health_record(patient_id, temperature, heart_rate, oxygen_saturation,
     status = get_detailed_status(temperature, heart_rate, oxygen_saturation, systolic, diastolic, bmi)
 
     abnormal_reasons = []
-
-    if temperature < 36.0:
-        abnormal_reasons.append("low body temperature")
 
     if temperature > 37.5:
         abnormal_reasons.append("high body temperature")
