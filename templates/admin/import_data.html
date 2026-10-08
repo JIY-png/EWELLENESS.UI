@@ -9,14 +9,14 @@
 
 <div class="import-container">
     <div class="import-section">
-        <h2>Import Kiosk Data (JSON)</h2>
-        <p>Upload a JSON file from your kiosk SD card containing health records with patient information.</p>
+        <h2>Import Kiosk Data (CSV)</h2>
+        <p>Upload a CSV file from your kiosk SD card containing health records with patient information.</p>
 
         <form action="{{ url_for('import_kiosk_data') }}" method="POST" enctype="multipart/form-data" class="import-form">
             <div class="form-group">
-                <label for="kiosk_file">Select JSON File</label>
-                <input type="file" id="kiosk_file" name="file" accept=".json" required>
-                <small>JSON format: Date, Time, FirstName, LastName, Age, Gender, BloodPressure, HeartRate_BPM, OxygenSaturation_pct, BodyTemp_C, Weight_kg, Height_cm, BMI</small>
+                <label for="kiosk_file">Select CSV File</label>
+                <input type="file" id="kiosk_file" name="file" accept=".csv" required>
+                <small>CSV format with headers: Date, Time, FirstName, LastName, Age, Gender, BloodPressure, HeartRate, OxygenSaturation, BodyTemp, Weight, Height, BMI</small>
             </div>
 
             <button type="submit" class="btn btn-primary">Import Kiosk Data</button>
@@ -25,58 +25,17 @@
 </div>
 
 <div class="import-help">
-    <h3>Kiosk JSON Format</h3>
+    <h3>Kiosk CSV Format</h3>
     
-    <h4>Single Record Format:</h4>
-    <pre>{
-  "A": "Date",
-  "B": "Time",
-  "C": "FirstName",
-  "D": "LastName",
-  "E": "Age",
-  "F": "Gender",
-  "G": "BloodPressure",
-  "H": "HeartRate_BPM",
-  "I": "OxygenSaturation_pct",
-  "J": "BodyTemp_C",
-  "K": "Weight_kg",
-  "L": "Height_cm",
-  "M": "BMI"
-}</pre>
-    
-    <h4>Multiple Records Format:</h4>
-    <pre>[
-  {
-    "A": "2026-05-31",
-    "B": "09:00",
-    "C": "Maria",
-    "D": "Santos",
-    "E": 24,
-    "F": "Female",
-    "G": "120/80",
-    "H": 78,
-    "I": 98,
-    "J": 36.7,
-    "K": 54,
-    "L": 158,
-    "M": 21.6
-  },
-  {
-    "A": "2026-05-31",
-    "B": "10:00",
-    "C": "Juan",
-    "D": "Dela Cruz",
-    "E": 27,
-    "F": "Male",
-    "G": "118/76",
-    "H": 72,
-    "I": 99,
-    "J": 36.5,
-    "K": 70,
-    "L": 170,
-    "M": 24.2
-  }
-]</pre>
+    <h4>Standard Format (with Verbose Headers):</h4>
+    <pre>Date,Time,FirstName,LastName,Age,Gender,BloodPressure,HeartRate,OxygenSaturation,BodyTemp,Weight,Height,BMI
+2026-05-31,09:00,Maria,Santos,24,Female,120/80,78,98,36.7,54,158,21.6
+2026-05-31,10:00,Juan,Dela Cruz,27,Male,118/76,72,99,36.5,70,170,24.2</pre>
+
+    <h4>Alternative Format (with Letter Headers):</h4>
+    <pre>A,B,C,D,E,F,G,H,I,J,K,L,M
+2026-05-31,09:00,Maria,Santos,24,Female,120/80,78,98,36.7,54,158,21.6
+2026-05-31,10:00,Juan,Dela Cruz,27,Male,118/76,72,99,36.5,70,170,24.2</pre>
 </div>
 
 <style>
