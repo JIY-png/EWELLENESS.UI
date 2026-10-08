@@ -222,14 +222,3 @@ For production deployment:
 - [Supabase Python Client](https://supabase.com/docs/reference/python)
 - [Supabase SQL Editor](https://supabase.com/docs/guides/database)
 
-## Migration from Firebase
-
-If you're migrating from Firebase Firestore:
-
-1. Export your existing data from Firebase
-2. Transform the data to match the Supabase schema
-3. Import the data into Supabase using the SQL Editor or API
-4. Update the application code to use Supabase (already done in this version)
-5. Test all functionality to ensure data integrity
-
-The data structures are similar, but Supabase uses PostgreSQL which is a relational database, while Firebase uses a NoSQL document database. The schema provided maintains the same data model while leveraging PostgreSQL's relational capabilities.
